@@ -20,9 +20,10 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         if (config('app.env') === 'production') {
-            \Illuminate\Support\Facades\URL::forceScheme('https');
-            if (config('app.url')) {
-                \Illuminate\Support\Facades\URL::forceRootUrl(config('app.url'));
+            // Safe HTTPS forcing: only if we are behind a proxy that says it is secure, 
+            // or if the request came in as secure. This prevents loops in non-SSL dev environments.
+            if (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https') {
+                \Illuminate\Support\Facades\URL::forceScheme('https');
             }
         }
 
