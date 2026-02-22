@@ -1,8 +1,8 @@
-# InfraMatrix - Application Guide
+# InfraMatrix - Application Guide (v1.0)
 *(This file should be updated whenever new features or requirements are added)*
 
 ## Application Overview
-Welcome to **InfraMatrix**, the production-ready internal application for tracking and managing Servers, Git Providers, Integration Types, and Projects.
+Welcome to **InfraMatrix (Version 1.0)**, the production-ready internal application for tracking and managing Servers, Git Providers, Integration Types, and Projects.
 
 Here is a complete breakdown of every menu, button, and functionality available in the admin panel.
 

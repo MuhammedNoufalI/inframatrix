@@ -1,6 +1,7 @@
 <div align="center">
     <h1>InfraMatrix</h1>
     <p><b>Enterprise-Grade Infrastructure & Project Tracker</b></p>
+    <p>🚀 <b>Version 1.0</b> - Production Ready</p>
 </div>
 
 ---
