@@ -105,4 +105,17 @@ class AccountResource extends Resource
             'edit' => Pages\EditAccount::route('/{record}/edit'),
         ];
     }
+
+    public static function getEloquentQuery(): Builder
+    {
+        $query = parent::getEloquentQuery();
+
+        if (!auth()->user()->hasRole(['admin', 'infra_admin'])) {
+            $query->whereHas('integrations.environment.project.users', function (Builder $q) {
+                $q->where('user_id', auth()->id());
+            });
+        }
+
+        return $query;
+    }
 }

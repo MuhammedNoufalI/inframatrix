@@ -9,7 +9,10 @@ class EnvironmentPolicy
 {
     public function viewAny(User $user): bool
     {
-        return $user->hasRole(['admin', 'infra_admin', 'infra_user']);
+        if ($user->hasRole(['admin', 'infra_admin', 'infra_user'])) {
+            return true;
+        }
+        return $user->projects()->exists();
     }
 
     public function view(User $user, Environment $environment): bool

@@ -13,7 +13,10 @@ class AccountPolicy
      */
     public function viewAny(User $user): bool
     {
-        return $user->hasRole(['admin', 'infra_admin', 'manager', 'editor', 'viewer']);
+        if ($user->hasRole(['admin', 'infra_admin', 'infra_user'])) {
+            return true;
+        }
+        return $user->projects()->exists();
     }
 
     /**
@@ -21,7 +24,12 @@ class AccountPolicy
      */
     public function view(User $user, Account $account): bool
     {
-        return $user->hasRole(['admin', 'infra_admin', 'manager', 'editor', 'viewer']);
+        if ($user->hasRole(['admin', 'infra_admin'])) {
+            return true;
+        }
+        return $account->integrations()->whereHas('environment.project.users', function ($query) use ($user) {
+            $query->where('user_id', $user->id);
+        })->exists();
     }
 
     /**
