@@ -1,4 +1,5 @@
 <div align="center">
+    <img src="docs/screenshots/inframatrix_banner.png" alt="InfraMatrix Banner" width="100%">
     <h1>InfraMatrix</h1>
     <p><b>Enterprise-Grade Infrastructure & Project Tracker</b></p>
     <p>🚀 <b>Version 1.0</b> - Production Ready</p>
