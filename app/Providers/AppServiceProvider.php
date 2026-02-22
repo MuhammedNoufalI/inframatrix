@@ -20,9 +20,16 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         if (config('app.env') === 'production') {
-            // Safe HTTPS forcing: only if we are behind a proxy that says it is secure, 
-            // or if the request came in as secure. This prevents loops in non-SSL dev environments.
+            // Robust HTTPS forcing: check both X-Forwarded-Proto (standard proxy) 
+            // and the 'HTTPS' server variable (CloudPanel explicit param).
+            $isSecure = false;
             if (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https') {
+                $isSecure = true;
+            } elseif (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') {
+                $isSecure = true;
+            }
+
+            if ($isSecure) {
                 \Illuminate\Support\Facades\URL::forceScheme('https');
             }
         }
