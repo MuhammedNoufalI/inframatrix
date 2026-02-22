@@ -20,23 +20,13 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         if (config('app.env') === 'production') {
-            // Safe HTTPS forcing: only if we are behind a proxy that says it is secure, 
-            // the request came in as secure, or the APP_URL implies HTTPS.
-            $isSecure = false;
-            if (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https') {
-                $isSecure = true;
-            } elseif (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') {
-                $isSecure = true;
-            }
-
-            if ($isSecure) {
-                \Illuminate\Support\Facades\URL::forceScheme('https');
-                
-                // Force root URL to match APP_URL to ensure Livewire/Filament link consistency 
-                // across proxy layers (removes port-mismatch risks).
-                if (config('app.url')) {
-                    \Illuminate\Support\Facades\URL::forceRootUrl(config('app.url'));
-                }
+            // Unconditionally force HTTPS scheme and root URL in production.
+            // This prevents 405 Method Not Allowed errors on Livewire/Filament POST forms
+            // caused by CloudPanel Varnish proxies losing the original request protocol.
+            \Illuminate\Support\Facades\URL::forceScheme('https');
+            
+            if (config('app.url')) {
+                \Illuminate\Support\Facades\URL::forceRootUrl(config('app.url'));
             }
         }
 
