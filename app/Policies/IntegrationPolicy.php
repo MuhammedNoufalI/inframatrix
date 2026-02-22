@@ -9,12 +9,15 @@ class IntegrationPolicy
 {
     public function viewAny(User $user): bool
     {
-        return $user->hasRole(['admin', 'infra_admin', 'manager', 'editor', 'viewer']);
+        return $user->hasRole(['admin', 'infra_admin', 'infra_user']);
     }
 
     public function view(User $user, Integration $integration): bool
     {
-        return $user->hasRole(['admin', 'infra_admin', 'manager', 'editor', 'viewer']);
+        if ($user->hasRole(['admin', 'infra_admin'])) {
+            return true;
+        }
+        return $integration->environment->project->users()->where('user_id', $user->id)->exists();
     }
 
     public function create(User $user): bool
@@ -24,11 +27,17 @@ class IntegrationPolicy
 
     public function update(User $user, Integration $integration): bool
     {
-        return $user->hasRole(['admin', 'infra_admin']);
+        if ($user->hasRole(['admin', 'infra_admin'])) {
+            return true;
+        }
+        return $integration->environment->project->users()->wherePivotIn('role', ['manager', 'editor'])->where('user_id', $user->id)->exists();
     }
 
     public function delete(User $user, Integration $integration): bool
     {
-        return $user->hasRole(['admin', 'infra_admin']);
+        if ($user->hasRole(['admin', 'infra_admin'])) {
+            return true;
+        }
+        return $integration->environment->project->users()->wherePivot('role', 'manager')->where('user_id', $user->id)->exists();
     }
 }

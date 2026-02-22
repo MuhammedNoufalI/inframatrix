@@ -9,26 +9,35 @@ class EnvironmentPolicy
 {
     public function viewAny(User $user): bool
     {
-        return $user->hasRole(['admin', 'infra_admin', 'manager', 'editor', 'viewer']);
+        return $user->hasRole(['admin', 'infra_admin', 'infra_user']);
     }
 
     public function view(User $user, Environment $environment): bool
     {
-        return $user->hasRole(['admin', 'infra_admin', 'manager', 'editor', 'viewer']);
+        if ($user->hasRole(['admin', 'infra_admin'])) {
+            return true;
+        }
+        return $environment->project->users()->where('user_id', $user->id)->exists();
     }
 
     public function create(User $user): bool
     {
-        return $user->hasRole(['admin', 'infra_admin', 'manager']);
+        return $user->hasRole(['admin', 'infra_admin']);
     }
 
     public function update(User $user, Environment $environment): bool
     {
-        return $user->hasRole(['admin', 'infra_admin', 'manager', 'editor']);
+        if ($user->hasRole(['admin', 'infra_admin'])) {
+            return true;
+        }
+        return $environment->project->users()->wherePivotIn('role', ['manager', 'editor'])->where('user_id', $user->id)->exists();
     }
 
     public function delete(User $user, Environment $environment): bool
     {
-        return $user->hasRole(['admin', 'infra_admin']);
+        if ($user->hasRole(['admin', 'infra_admin'])) {
+            return true;
+        }
+        return $environment->project->users()->wherePivot('role', 'manager')->where('user_id', $user->id)->exists();
     }
 }
