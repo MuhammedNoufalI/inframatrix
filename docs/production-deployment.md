@@ -66,8 +66,12 @@ php artisan migrate --force
 
 # Optimize & Cache
 php artisan optimize
-php artisan filament:cache-components
 php artisan view:cache
+
+# Publish Frontend Assets (CRITICAL for Nginx/CloudPanel to avoid 404s on .js files)
+php artisan livewire:publish --assets
+php artisan filament:assets
+php artisan filament:cache-components
 
 # Linked Storage
 php artisan storage:link
