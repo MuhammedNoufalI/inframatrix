@@ -1,21 +1,21 @@
-# Production Deployment Guide
+# Production Deployment & Reverse Proxy Guide
 
-This guide covers the necessary steps to harden and deploy InfraMatrix (Laravel 11 + Filament v3) in a production environment, specifically when running behind reverse proxies or SSL termination points.
+This document provides instructions for deploying InfraMatrix (Laravel 11 + Filament v3) in professionally managed environments, particularly behind reverse proxies (Nginx, Varnish, Load Balancers).
 
-## 1. System Requirements
+## 1. Prerequisites
 
-- **PHP 8.2+**
-- **Required Extensions:** BCMath, Ctype, Fileinfo, JSON, Mbstring, OpenSSL, PDO, Tokenizer, XML.
-- **MySQL 8.0+**
+- **PHP 8.2+** (Extensions: `bcmath, ctype, fileinfo, json, mbstring, openssl, pdo_mysql, tokenizer, xml`)
+- **MariaDB 10.11+** or **MySQL 8.0+**
 - **Composer 2.x**
+- **Hosting Panel:** Compatible with CloudPanel, Plesk, cPanel, or custom Nginx setups.
 
 ## 2. Web Server Configuration
 
-### Webroot
-The web server (Nginx, Apache, etc.) MUST have its document root set to the `/public` directory of the project.
+### Document Root
+The web server's **Document Root** MUST point to the `/public` directory of the repository.
 
-### Nginx Configuration
-Ensure your Vhost configuration includes the standard Laravel routing rule:
+### Nginx Vhost Requirements
+Ensure the following rule is present to handle Laravel's routing:
 
 ```nginx
 location / {
@@ -23,57 +23,60 @@ location / {
 }
 ```
 
-### Reverse Proxy / SSL Termination
-If you are running behind a proxy (like Varnish, Cloudflare, or a Load Balancer):
+### Reverse Proxy & SSL Termination
+If your application terminates SSL at a proxy (e.g., CloudPanel's Varnish or a hardware load balancer):
 
-1. **Forwarded Headers:** Ensure your proxy passes the following headers:
+1. **Proxy Headers:** Ensure the proxy transmits these headers:
    - `X-Forwarded-For`
-   - `X-Forwarded-Proto` (essential for HTTPS detection)
+   - `X-Forwarded-Proto` (Must be `https`)
    - `X-Forwarded-Host`
-   - `X-Forwarded-Port`
 
-2. **Varnish / Caching:** Admin panels (Filament) and Livewire requests should generally bypass caching to prevent state issues.
-   - Exclude paths: `/admin/*`, `/filament/*`, `/livewire/*`.
+2. **Varnish Exclusions:** Prevent Varnish from caching dynamic administrative routes:
+   - Exclude: `/admin/*`, `/livewire/*`, `/filament/*`.
 
-## 3. Environment Configuration (.env)
+## 3. Application Hardening (.env)
 
-Harden your production `.env` with these settings:
+Configure your production `.env` with these hardened settings:
 
 ```ini
 APP_ENV=production
 APP_DEBUG=false
 LOG_LEVEL=error
 
-# Trusted Proxies (Required for SSL detection behind proxies)
-# Set to '*' to trust all proxies (typical for hosting panels)
+# Trust proxy headers for correct SSL/IP detection
 TRUSTED_PROXIES=*
 
-# Secure Cookies
+# Secure session cookies (Enforce HTTPS)
 SESSION_SECURE_COOKIE=true
 ```
 
-## 4. Deployment Commands
+## 4. Deployment Pipeline
 
-Run these commands on every deployment to ensure the application is optimized:
+Run these commands during deployment to refresh the environment and optimize performance:
 
 ```bash
-# Clear all caches (useful during major updates)
-php artisan optimize:clear
+# Pull latest code
+git pull origin main
 
-# Cache configuration, routes, and views for speed
-php artisan config:cache
-php artisan route:cache
+# Install dependencies
+composer install --no-dev --optimize-autoloader
+
+# Update database
+php artisan migrate --force
+
+# Optimize & Cache
+php artisan optimize
+php artisan filament:cache-components
 php artisan view:cache
 
-# Optimize Filament components
-php artisan filament:cache-components
-
-# Ensure storage is linked
+# Linked Storage
 php artisan storage:link
 ```
 
-## 5. Security Best Practices
+## 5. Troubleshooting (405 Method Not Allowed)
 
-- **APP_KEY:** Ensure a unique encryption key is generated (`php artisan key:generate`).
-- **Filesystem:** Ensure the `storage` and `bootstrap/cache` directories are writable by the web server user.
-- **Permissions:** Never use `777` permissions; use `775` for directories and `644` for files, owned by the web user.
+If you encounter a `405 Method Not Allowed` error on login:
+1. Ensure `APP_URL` in `.env` starts with `https://`.
+2. Ensure `TRUSTED_PROXIES=*` is set in `.env`.
+3. Verify that the web server passes the `X-Forwarded-Proto` header.
+4. Run `php artisan optimize:clear` to ensure no old route/config caches are lingering.

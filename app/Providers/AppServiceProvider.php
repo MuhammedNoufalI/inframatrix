@@ -20,8 +20,8 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         if (config('app.env') === 'production') {
-            // Robust HTTPS forcing: check both X-Forwarded-Proto (standard proxy) 
-            // and the 'HTTPS' server variable (CloudPanel explicit param).
+            // Safe HTTPS forcing: only if we are behind a proxy that says it is secure, 
+            // the request came in as secure, or the APP_URL implies HTTPS.
             $isSecure = false;
             if (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https') {
                 $isSecure = true;
@@ -31,6 +31,12 @@ class AppServiceProvider extends ServiceProvider
 
             if ($isSecure) {
                 \Illuminate\Support\Facades\URL::forceScheme('https');
+                
+                // Force root URL to match APP_URL to ensure Livewire/Filament link consistency 
+                // across proxy layers (removes port-mismatch risks).
+                if (config('app.url')) {
+                    \Illuminate\Support\Facades\URL::forceRootUrl(config('app.url'));
+                }
             }
         }
 
