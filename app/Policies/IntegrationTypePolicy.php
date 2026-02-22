@@ -9,12 +9,18 @@ class IntegrationTypePolicy
 {
     public function viewAny(User $user): bool
     {
-        return $user->hasRole(['admin', 'infra_admin', 'manager', 'editor', 'viewer']);
+        if ($user->hasRole(['admin', 'infra_admin'])) {
+            return true;
+        }
+        return $user->projects()->exists();
     }
 
     public function view(User $user, IntegrationType $integrationType): bool
     {
-        return $user->hasRole(['admin', 'infra_admin', 'manager', 'editor', 'viewer']);
+        if ($user->hasRole(['admin', 'infra_admin'])) {
+            return true;
+        }
+        return $user->projects()->exists();
     }
 
     public function create(User $user): bool

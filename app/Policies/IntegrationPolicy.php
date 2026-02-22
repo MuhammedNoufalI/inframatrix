@@ -9,7 +9,7 @@ class IntegrationPolicy
 {
     public function viewAny(User $user): bool
     {
-        if ($user->hasRole(['admin', 'infra_admin', 'infra_user'])) {
+        if ($user->hasRole(['admin', 'infra_admin'])) {
             return true;
         }
         return $user->projects()->exists();
@@ -17,7 +17,7 @@ class IntegrationPolicy
 
     public function view(User $user, Integration $integration): bool
     {
-        if ($user->hasRole(['admin', 'infra_admin'])) {
+        if ($user->hasRole('admin')) {
             return true;
         }
         return $integration->environment->project->users()->where('user_id', $user->id)->exists();
@@ -25,22 +25,28 @@ class IntegrationPolicy
 
     public function create(User $user): bool
     {
-        return $user->hasRole(['admin', 'infra_admin']);
+        if ($user->hasRole(['admin', 'infra_admin'])) {
+            return true;
+        }
+        return $user->projects()->wherePivotIn('role', ['owner', 'editor'])->exists();
     }
 
     public function update(User $user, Integration $integration): bool
     {
-        if ($user->hasRole(['admin', 'infra_admin'])) {
+        if ($user->hasRole('admin')) {
             return true;
         }
-        return $integration->environment->project->users()->wherePivotIn('role', ['manager', 'editor'])->where('user_id', $user->id)->exists();
+        if ($user->hasRole('infra_admin') && $integration->environment->project->users()->where('user_id', $user->id)->exists()) {
+            return true;
+        }
+        return $integration->environment->project->users()->wherePivotIn('role', ['owner', 'editor'])->where('user_id', $user->id)->exists();
     }
 
     public function delete(User $user, Integration $integration): bool
     {
-        if ($user->hasRole(['admin', 'infra_admin'])) {
+        if ($user->hasRole('admin')) {
             return true;
         }
-        return $integration->environment->project->users()->wherePivot('role', 'manager')->where('user_id', $user->id)->exists();
+        return $integration->environment->project->users()->wherePivot('role', 'owner')->where('user_id', $user->id)->exists();
     }
 }

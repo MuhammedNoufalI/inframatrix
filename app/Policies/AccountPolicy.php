@@ -13,7 +13,7 @@ class AccountPolicy
      */
     public function viewAny(User $user): bool
     {
-        if ($user->hasRole(['admin', 'infra_admin', 'infra_user'])) {
+        if ($user->hasRole(['admin', 'infra_admin'])) {
             return true;
         }
         return $user->projects()->exists();

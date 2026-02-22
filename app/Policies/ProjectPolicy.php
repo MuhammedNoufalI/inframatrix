@@ -9,7 +9,7 @@ class ProjectPolicy
 {
     public function viewAny(User $user): bool
     {
-        if ($user->hasRole(['admin', 'infra_admin', 'infra_user'])) {
+        if ($user->hasRole(['admin', 'infra_admin'])) {
             return true;
         }
         return $user->projects()->exists();
@@ -17,7 +17,7 @@ class ProjectPolicy
 
     public function view(User $user, Project $project): bool
     {
-        if ($user->hasRole(['admin', 'infra_admin'])) {
+        if ($user->hasRole('admin')) {
             return true;
         }
         return $project->users()->where('user_id', $user->id)->exists();
@@ -30,17 +30,20 @@ class ProjectPolicy
 
     public function update(User $user, Project $project): bool
     {
-        if ($user->hasRole(['admin', 'infra_admin'])) {
+        if ($user->hasRole('admin')) {
             return true;
         }
-        return $project->users()->wherePivotIn('role', ['manager', 'editor'])->where('user_id', $user->id)->exists();
+        if ($user->hasRole('infra_admin') && $project->users()->where('user_id', $user->id)->exists()) {
+            return true;
+        }
+        return $project->users()->wherePivotIn('role', ['owner', 'editor'])->where('user_id', $user->id)->exists();
     }
 
     public function delete(User $user, Project $project): bool
     {
-        if ($user->hasRole(['admin', 'infra_admin'])) {
+        if ($user->hasRole('admin')) {
             return true;
         }
-        return $project->users()->wherePivot('role', 'manager')->where('user_id', $user->id)->exists();
+        return $project->users()->wherePivot('role', 'owner')->where('user_id', $user->id)->exists();
     }
 }

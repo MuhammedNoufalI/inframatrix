@@ -8,12 +8,12 @@ class UserPolicy
 {
     public function viewAny(User $user): bool
     {
-        return $user->hasRole(['admin']);
+        return true;
     }
 
     public function view(User $user, User $model): bool
     {
-        return $user->hasRole(['admin']) || $user->id === $model->id;
+        return true;
     }
 
     public function create(User $user): bool

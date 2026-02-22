@@ -9,12 +9,18 @@ class GitProviderPolicy
 {
     public function viewAny(User $user): bool
     {
-        return $user->hasRole(['admin', 'infra_admin']);
+        if ($user->hasRole(['admin', 'infra_admin'])) {
+            return true;
+        }
+        return $user->projects()->exists();
     }
 
     public function view(User $user, GitProvider $gitProvider): bool
     {
-        return $user->hasRole(['admin', 'infra_admin']);
+        if ($user->hasRole(['admin', 'infra_admin'])) {
+            return true;
+        }
+        return $user->projects()->exists();
     }
 
     public function create(User $user): bool
