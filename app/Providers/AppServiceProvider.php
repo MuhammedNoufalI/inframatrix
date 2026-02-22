@@ -28,6 +28,13 @@ class AppServiceProvider extends ServiceProvider
             if (config('app.url')) {
                 \Illuminate\Support\Facades\URL::forceRootUrl(config('app.url'));
             }
+
+            // Force Livewire to use a dedicated update endpoint instead of the current URL.
+            // This bypasses 405 errors caused by Varnish stripping custom Livewire headers
+            // and Laravel failing to find a POST route for standard pages like /admin/login.
+            \Livewire\Livewire::setUpdateRoute(function ($handle) {
+                return \Illuminate\Support\Facades\Route::post('/livewire/update', $handle);
+            });
         }
 
         \Illuminate\Support\Facades\Gate::before(function ($user, $ability) {
